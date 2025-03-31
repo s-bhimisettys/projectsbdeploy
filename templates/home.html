@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!--<link rel="stylesheet" href="style.css">-->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.2.1/dist/chart.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Stock Visualizer</title>
+
+    <style>
+        body{
+            background-color: lightskyblue;
+        }
+
+        h2{
+            font-family: sans-serif;
+            font-size: 40px;
+            font-size: larger;
+            text-align: center;
+            text-shadow: 2px 2px red;
+        }
+        
+    </style>
+</head>
+
+<body>
+<h2>Interative Stock Visualizer</h2>
+
+
+<div id="graph-area" style="height:80%; width:80%;">
+<canvas id="myChart0"></canvas>
+<table id="table0">
+    <thead>
+    <tr> 
+        <th>
+            Open Average
+        </th>
+        <th>
+            Close Average
+        </th>
+        <th>
+            High Average
+        </th>
+        <th>
+            Low Average
+        </th>
+    </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td id="open_avg0">
+                
+            </td>
+            <td id="close_avg0">
+
+            </td>
+            <td id="high_avg0">
+
+            </td>
+            <td id="low_avg0">
+
+            </td>
+        </tr>
+    </tbody>
+</table>
+<canvas id="myChart1"></canvas>
+<table id="table1">
+    <thead>
+        <tr> 
+            <th>
+                Open Average
+            </th>
+            <th>
+                Close Average
+            </th>
+            <th>
+                High Average
+            </th>
+            <th>
+                Low Average
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td id="open_avg1">
+                    
+                </td>
+                <td id="close_avg1">
+    
+                </td>
+                <td id="high_avg1">
+    
+                </td>
+                <td id="low_avg1">
+    
+                </td>
+            </tr>
+        </tbody>
+</table>
+<canvas id="myChart2"></canvas>
+<table id="table2">
+    <thead>
+        <tr> 
+            <th>
+                Open Average
+            </th>
+            <th>
+                Close Average
+            </th>
+            <th>
+                High Average
+            </th>
+            <th>
+                Low Average
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td id="open_avg2">
+                    
+                </td>
+                <td id="close_avg2">
+    
+                </td>
+                <td id="high_avg2">
+    
+                </td>
+                <td id="low_avg2">
+    
+                </td>
+            </tr>
+        </tbody>
+</table>
+<canvas id="myChart3"></canvas>
+<table id="table3">
+    <thead>
+        <tr> 
+            <th>
+                Open Average
+            </th>
+            <th>
+                Close Average
+            </th>
+            <th>
+                High Average
+            </th>
+            <th>
+                Low Average
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td id="open_avg3">
+                    
+                </td>
+                <td id="close_avg3">
+    
+                </td>
+                <td id="high_avg3">
+    
+                </td>
+                <td id="low_avg3">
+    
+                </td>
+            </tr>
+        </tbody>
+</table>
+<canvas id="myChart4"></canvas>
+<table id="table4">
+    <thead>
+        <tr> 
+            <th>
+                Open Average
+            </th>
+            <th>
+                Close Average
+            </th>
+            <th>
+                High Average
+            </th>
+            <th>
+                Low Average
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td id="open_avg4">
+                    
+                </td>
+                <td id="close_avg4">
+    
+                </td>
+                <td id="high_avg4">
+    
+                </td>
+                <td id="low_avg4">
+    
+                </td>
+            </tr>
+        </tbody>
+</table>
+
+</div>
+<br>
+
+<div>
+    Friendly reminder: if the graphing function stops working after several successful instances, don't worry! It is likely that you have reached the 5 requests/minute rate limit of the free Alpha Vantage API key. The graph should work again in the next minute or after you obtain a <a href="https://www.alphavantage.co/premium/" target="_blank">premium API key</a> with a higher rate limit.
+</div>
+
+<script>
+
+    tickers = ['IBIT', 'GBTC', 'FBTC', 'ARKB', 'BITB']
+    
+
+        $(document).ready(function(){
+            tickers.forEach(function(ticker, i){
+        // Right after the page is loaded, we get the stock data (default to AAPL) from the Django backend (the 'get_stock_data' function) for plotting
+        $.ajax({
+              type: "POST",
+              url: "/get_stock_data/",
+              data: {
+                 'ticker': tickers[i],
+              },
+              success: function (res, status) {
+                // AAPL's stock price and SMA data is now in the "res" object
+                var tickerDisplay = tickers[i];
+                var graphTitle = tickerDisplay + ' (data for the trailing 500 trading days)'
+
+                var priceSeries = res;
+                var close = [];
+                var open = [];
+                var high = [];
+                var low = [];
+                var dates = [];
+                var open_avg = [];
+
+                const sumData = sum_data(res)
+                update_table(res)
+                
+
+                /*
+                price_data_parse = function(){
+                    for (let key in priceSeries) {
+                        close.push(priceSeries[key]['close']);
+                        open.push(priceSeries[key]['open']);
+                        high.push(priceSeries[key]['high']);
+                        low.push(priceSeries[key]['low']);
+                        dates.push(priceSeries[key]['ts_event']);
+                    }
+
+                };
+                price_data_parse();
+               */
+
+               res.forEach(function(data){
+                    close.push(data.close);
+                    open.push(data.open);
+                    high.push(data.high);
+                    low.push(data.low);
+                    dates.push(data.ts_event);
+               });
+               console.log(res);
+               
+                //instruct Chart.js to plot the graph, with "dates" as the x-axis labels and "daily_adjusted_close" and "sma_data" as the y-axis values
+                var ctx = document.getElementById('myChart' + (i)).getContext('2d');
+                var myChart = new Chart(ctx, {
+                type: 'line',
+                    data: {
+                        labels: dates,
+                        datasets: [
+                            {
+                                label: 'Open',
+                                data: open,
+                                backgroundColor: [
+                                    'green',
+                                ],
+                                borderColor: [
+                                    'green',
+                                ],
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'High',
+                                data: high,
+                                backgroundColor: [
+                                    'blue',
+                                ],
+                                borderColor: [
+                                    'blue',
+                                ],
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Low',
+                                data: low,
+                                backgroundColor: [
+                                    'red',
+                                ],
+                                borderColor: [
+                                    'red',
+                                ],
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Close',
+                                data: close,
+                                backgroundColor: [
+                                    'orange',
+                                ],
+                                borderColor: [
+                                    'orange',
+                                ],
+                                borderWidth: 1
+                            },
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                //beginAtZero: false
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                            position: 'top',
+                            },
+                            title: {
+                            display: true,
+                            text: graphTitle
+                            }
+                        }
+                    }
+                });
+
+                function update_table(data){
+                    //$('#open_avg').text(sum_data(data).open_avg)
+                    $('#open_avg'+i).text(sum_data(data))
+                    $('#close_avg'+i).text(sum_data(data))
+                    $('#high_avg'+i).text(sum_data(data))
+                    $('#low_avg'+i).text(sum_data(data))
+                }
+
+                function sum_data(data){
+                    const sum = {}
+                    let total_open = 0
+                    let total_close = 0
+                    let total_high = 0
+                    let total_low = 0
+                    values = []
+            
+
+                    data.forEach((point => {
+                        const date = new Date(point.dates)
+                        date.setSeconds(0,0)
+                        const timeIndex = date.getTime()
+                        if(!sum[timeIndex]) {
+                            sum[timeIndex] = {
+                            open_avg: point.open, close_avg: point.close, high_avg: point.high, low_avg: point.low
+                        } } 
+                        else {
+                            sum[timeIndex].open_avg = point.open
+                            sum[timeIndex].close_avg = point.close
+                            sum[timeIndex].high_avg = point.high
+                            sum[timeIndex].low_avg = point.low
+                        }
+                        
+                        values.push(point.open)
+
+                        total_open += point.open 
+                        total_close += point.close
+                        total_high += point.high
+                        total_low += point.low 
+                    }))
+                    average_open = total_open/values.length;
+                    average_close = total_close/values.length;
+                    average_high = total_high/values.length;
+                    average_low = total_low/values.length;
+
+                    console.log(sum)
+                    console.log('checking sum...')
+                    //return Object.values(sum)
+                    return average_open, average_close, average_high, average_low
+                }
+                /*
+                const tb = document.getElementById('table' + (i));
+                const tb_avg = tb.rows[1].tb_avg[0];
+                const tb_high = tb.rows[1][1];
+                const tb_low = tb.rows[1].cell[2];
+                const tb_vol = tb.rows[1].cell[3];
+                const tb_open = tb.rows[1].cell[4];
+
+                let avg = 0;
+                let ov_high = 0;
+                let ov_low = close[0];
+                let vol = 0;
+                let avg_open = 0;
+
+                for (let k = 0; k < close.length; k++) {
+                    avg += close[k];
+                    vol += volumes[k];
+                    if (close[k] > ov_high){
+                        ov_high = close[k];
+                    }
+                    if (close[k] < ov_low){
+                        ov_low = close[k];
+                    }
+                }
+
+                for (let k = 0; k < open.length; k++) {
+                    avg_open += open[k];
+                }
+                
+                avg /= close.length;
+                vol /= close.length;
+                avg_open /= open.length;
+                tb_avg.innerHTML = avg.toFixed(3);
+                tb_high.innerHTML = ov_high.toFixed(3);
+                tb_low.innerHTML = ov_low.toFixed(3);
+                tb_vol.innerHTML = vol.toFixed(3);
+                tb_open.innerHTML = avg_open.toFixed(3);
+                */
+            }
+
+        });
+
+    });
+    });
+
+
+    
+    
+</script>
+
+</body>
+</html>
